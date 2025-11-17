@@ -251,7 +251,7 @@ ggplot(
 chi_nogeo <- chi_panel_sf %>%
   st_drop_geometry()
 
-## 1.1 Afroamericanos (A) vs Blancos (B) ----------------------------
+# 5.1 Afroamericanos (A) vs Blancos (B) ------
 
 chi_bw <- chi_nogeo %>%
   mutate(
@@ -264,6 +264,11 @@ chi_bw <- chi_nogeo %>%
     POP_pair > 0
   )
 
+chi_bw
+names(chi_bw)
+head(chi_bw)
+
+# Resumen Afroamericanos (A) vs Blancos (B) por año
 seg_bw <- chi_bw %>%
   group_by(year) %>%
   summarise(
@@ -285,7 +290,7 @@ seg_bw <- chi_bw %>%
       na.rm = TRUE
     ),
     
-    # (opcional) aislamiento de blancos
+    # aislamiento de blancos
     Iso_white = sum(
       (POP_B / sum(POP_B, na.rm = TRUE)) * (POP_B / POP_pair),
       na.rm = TRUE
@@ -299,10 +304,10 @@ seg_bw <- chi_bw %>%
   )
 
 seg_bw
+names(seg_bw)
+head(seg_bw)
 
-
-## 1.2 Hispanos (A) vs Blancos (B) ----
-
+# 5.2 Hispanos (A) vs Blancos (B) ------
 chi_hw <- chi_nogeo %>%
   mutate(
     POP_A    = Hispanic_Pop,
@@ -332,8 +337,207 @@ seg_hw <- chi_hw %>%
       (POP_A / sum(POP_A, na.rm = TRUE)) * (POP_A / POP_pair),
       na.rm = TRUE
     ),
-    Iso_white = sum(
-      (POP_B / sum(POP_B, na.rm = TR
-                   
+    .groups = "drop"
+  ) %>%
+  mutate(
+    D_hw     = 100 * D_hw,
+    Iso_hisp = 100 * Iso_hisp
+  )
 
+seg_hw
+names(seg_hw)
+head(seg_hw)
+# hagamos una tabla
+seg_indices <- seg_bw %>%
+  dplyr::select(year, D_bw, Iso_black) %>%
+  left_join(
+    seg_hw %>% dplyr::select(year, D_hw, Iso_hisp),
+    by = "year"
+  )
 
+seg_indices
+
+#--------------------------- Punto 3 ---------------------------------------------------
+# chi_panel_sf viene de antes, con geometry y las variables de raza
+names(chi_panel_sf)
+
+chi_panel_sf <- chi_panel_sf %>%
+  mutate(
+    share_minority = ifelse(
+      Total_Pop > 0 & !is.na(Total_Pop) & !is.na(White_Pop),
+      pmax(0, pmin(1, 1 - White_Pop / Total_Pop)),
+      NA_real_
+    )
+  )
+
+summary(chi_panel_sf$share_minority)
+
+#
+compute_tipping <- function(x, min_share = 0.01, max_share = 0.99) {
+  # x: vector de shares en [0,1]
+  x <- x[!is.na(x)]
+  # quitamos casi-ceros y casi-unos para que no manden la señal unos pocos tracts extremos
+  x <- x[x >= min_share & x <= max_share]
+  if (length(x) < 10) return(NA_real_)  
+  
+  x <- sort(x)
+  gaps <- diff(x)
+  idx_max <- which.max(gaps)
+  
+  # tipping = punto medio entre los dos valores que generan el mayor gap
+  tp <- (x[idx_max] + x[idx_max + 1]) / 2
+  return(tp)
+}
+
+#
+
+tipping_tbl <- chi_panel_sf %>%
+  st_drop_geometry() %>%
+  filter(Total_Pop > 0) %>%
+  group_by(year) %>%
+  summarise(
+    tp_minority = compute_tipping(share_minority),
+    tp_black    = compute_tipping(share_black),
+    tp_hisp     = compute_tipping(share_hispanic),
+    n_tracts    = n(),
+    .groups = "drop"
+  )
+
+tipping_tbl
+
+##
+
+chi_panel_tp <- chi_panel_sf %>%
+  left_join(tipping_tbl, by = "year") %>%
+  mutate(
+    cat_minority = case_when(
+      is.na(share_minority) ~ NA_character_,
+      share_minority <= tp_minority ~ "≤ tipping",
+      share_minority >  tp_minority ~ "> tipping"
+    ),
+    cat_black = case_when(
+      is.na(share_black) ~ NA_character_,
+      share_black <= tp_black ~ "≤ tipping",
+      share_black >  tp_black ~ "> tipping"
+    ),
+    cat_hisp = case_when(
+      is.na(share_hispanic) ~ NA_character_,
+      share_hispanic <= tp_hisp ~ "≤ tipping",
+      share_hispanic >  tp_hisp ~ "> tipping"
+    )
+  )
+chi_panel_tp
+
+#plot
+
+commareas_sf <- chi_panel_tp %>%
+  filter(!is.na(commarea_n)) %>%
+  dplyr::select(year, commarea_n, commarea, geometry) %>%  # <- aquí el cambio
+  group_by(year, commarea_n, commarea) %>%
+  summarise(
+    geometry = sf::st_union(geometry),
+    .groups  = "drop"
+  )
+
+ggplot(
+  chi_panel_tp %>% filter(!is.na(cat_minority))
+) +
+  geom_sf(aes(fill = cat_minority), color = NA) +
+  geom_sf(data = commareas_sf, fill = NA, color = "black", size = 0.3) +
+  facet_wrap(~ year) +
+  scale_fill_manual(
+    values = c("≤ tipping" = "grey80", "> tipping" = "red3"),
+    name   = "Share minorías"
+  ) +
+  labs(
+    title = "Chicago – Tracts por debajo y por encima del tipping point (minorías)",
+    x = NULL, y = NULL
+  ) +
+  theme_void() +
+  theme(
+    plot.title      = element_text(hjust = 0.5),
+    strip.text      = element_text(face = "bold"),
+    legend.position = "bottom"
+  )
+
+# Mapa afroamericanos: tracts por debajo / por encima del tipping
+ggplot(
+  chi_panel_tp %>% dplyr::filter(!is.na(cat_black))
+) +
+  geom_sf(aes(fill = cat_black), color = NA) +
+  geom_sf(data = commareas_sf, fill = NA, color = "black", size = 0.3) +
+  facet_wrap(~ year) +
+  scale_fill_manual(
+    values = c("≤ tipping" = "grey80", "> tipping" = "blue3"),
+    name   = "% afroamericanos"
+  ) +
+  labs(
+    title = "Chicago – Tracts por debajo y por encima del tipping point (afroamericanos)",
+    x = NULL, y = NULL
+  ) +
+  theme_void() +
+  theme(
+    plot.title      = element_text(hjust = 0.5),
+    strip.text      = element_text(face = "bold"),
+    legend.position = "bottom"
+  )
+
+# Mapa hispanos: tracts por debajo / por encima del tipping
+ggplot(
+  chi_panel_tp %>% dplyr::filter(!is.na(cat_hisp))
+) +
+  geom_sf(aes(fill = cat_hisp), color = NA) +
+  geom_sf(data = commareas_sf, fill = NA, color = "black", size = 0.3) +
+  facet_wrap(~ year) +
+  scale_fill_manual(
+    values = c("≤ tipping" = "grey80", "> tipping" = "darkorange3"),
+    name   = "% hispanos"
+  ) +
+  labs(
+    title = "Chicago – Tracts por debajo y por encima del tipping point (hispanos)",
+    x = NULL, y = NULL
+  ) +
+  theme_void() +
+  theme(
+    plot.title      = element_text(hjust = 0.5),
+    strip.text      = element_text(face = "bold"),
+    legend.position = "bottom"
+  )
+
+# Minorías
+tp_counts_minority <- chi_panel_tp %>%
+  st_drop_geometry() %>%
+  group_by(year, cat_minority) %>%
+  summarise(
+    n_tracts = n(),
+    pop_tot  = sum(Total_Pop, na.rm = TRUE),
+    .groups  = "drop"
+  )
+
+tp_counts_minority
+
+# Afroamericanos
+tp_counts_black <- chi_panel_tp %>%
+  st_drop_geometry() %>%
+  group_by(year, cat_black) %>%
+  summarise(
+    n_tracts = n(),
+    pop_tot  = sum(Total_Pop, na.rm = TRUE),
+    .groups  = "drop"
+  )
+
+tp_counts_black
+
+# Hispanos
+tp_counts_hisp <- chi_panel_tp %>%
+  st_drop_geometry() %>%
+  group_by(year, cat_hisp) %>%
+  summarise(
+    n_tracts = n(),
+    pop_tot  = sum(Total_Pop, na.rm = TRUE),
+    .groups  = "drop"
+  )
+
+tp_counts_hisp
+
+#revisar indices de iso
