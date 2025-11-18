@@ -1,10 +1,10 @@
 # Distribución Espacial de Composición Racial e Ingreso en Chicago
 
-## 📋 Descripción
+## Descripción
 
 Este proyecto analiza la **distribución espacial de grupos raciales** (afroamericanos e hispanos) en Chicago y su relación con el **ingreso mediano** a nivel de census tract. El estudio examina la evolución de la segregación residencial entre 2000 y 2020, aplicando índices clásicos de segregación (Duncan & Duncan, 1955) y el análisis de **tipping points** de Schelling (1971) y Card et al. (2008).
 
-## 👥 Autores
+## Autores
 
 - **Luis Alejandro Rubiano Guerrero** - 202013482 - [la.rubiano@uniandes.edu.co](mailto:la.rubiano@uniandes.edu.co)
 - **Andrés Felipe Rosas Castillo** - 202013471 - [a.rosas@uniandes.edu.co](mailto:a.rosas@uniandes.edu.co)
@@ -12,7 +12,7 @@ Este proyecto analiza la **distribución espacial de grupos raciales** (afroamer
 
 **Universidad de los Andes** - Curso de Economía Urbana (2025)
 
-## 📁 Estructura del Repositorio
+## Estructura del Repositorio
 
 ```
 ├── README.md                         # Este archivo
@@ -25,7 +25,7 @@ Este proyecto analiza la **distribución espacial de grupos raciales** (afroamer
     └── Combined_data_Panel (1).dta   # Panel demográfico 2000-2020
 ```
 
-## 🔧 Requisitos
+## Requisitos
 
 ### Software necesario
 - **R** (versión ≥ 4.0)
@@ -50,7 +50,7 @@ library(scales)      # Formatos de escalas
    - Variables: `FIPS`, `year`, `Total_Pop`, `White_Pop`, `Black_Pop`, `Hispanic_Pop`, `Median_Inc`
    - Años disponibles: 2000, 2015, 2020
 
-## 🚀 Instrucciones de Uso
+## Instrucciones de Uso
 
 ### 1. Configuración inicial
 ```r
@@ -104,9 +104,9 @@ pdflatex main\ (2).tex
 pdflatex main\ (2).tex
 ```
 
-## 📊 Principales Hallazgos
+## Principales Hallazgos
 
-### 1️⃣ Distribución Espacial
+### Distribución Espacial
 
 **Población Afroamericana:**
 - Concentración extrema en **South Side** y **West Side**
@@ -120,7 +120,7 @@ pdflatex main\ (2).tex
 - Segregación moderada pero menor que afroamericanos
 - Correlación con ingreso: **-0.06 a -0.12** (levemente negativa)
 
-### 2️⃣ Índices de Segregación (escala 0-100)
+### Índices de Segregación (escala 0-100)
 
 | Año  | D (Black-White) | Iso Black | D (Hispanic-White) | Iso Hispanic |
 |------|-----------------|-----------|---------------------|--------------|
@@ -134,7 +134,7 @@ pdflatex main\ (2).tex
 - **Segregación hispana**: Moderada-alta pero estable
 - **Tendencia**: Ligera desegregación afroamericana, hispanos estables
 
-### 3️⃣ Tipping Points
+### Tipping Points
 
 | Año  | TP Minorías | TP Afroamericanos | TP Hispanos |
 |------|-------------|-------------------|-------------|
@@ -148,7 +148,7 @@ pdflatex main\ (2).tex
 - **Tipping hispano** cae drásticamente de 87% a 50%: expansión de enclaves latinos
 - Evidencia de **dinámicas no lineales** al estilo Schelling
 
-## 🗺️ Visualizaciones Generadas
+## Visualizaciones Generadas
 
 El código produce automáticamente:
 
@@ -165,7 +165,7 @@ El código produce automáticamente:
    - `tipping_minority_map_afro.png`: Afroamericanos
    - `tipping_minority_map_hispanos.png`: Hispanos
 
-## 📚 Metodología
+## Metodología
 
 ### Índice de Disimilitud (Duncan & Duncan, 1955)
 $$D = \frac{1}{2} \sum_{i} \left| \frac{a_i}{A} - \frac{b_i}{B} \right|$$
@@ -186,7 +186,7 @@ $$\text{TP} = \frac{x_{(k^*)} + x_{(k^*+1)}}{2}, \quad k^* = \arg\max_k (x_{(k+1
 - Excluye extremos (< 1% y > 99%)
 - Captura umbrales donde la segregación "salta"
 
-## 🔍 Interpretación Económica
+## Interpretación Económica
 
 ### Persistencia de la segregación afroamericana
 - Legado de **redlining** y **restrictive covenants**
@@ -205,7 +205,7 @@ $$\text{TP} = \frac{x_{(k^*)} + x_{(k^*+1)}}{2}, \quad k^* = \arg\max_k (x_{(k+1
 - **Hispanos**: Relación más débil, mayor heterogeneidad de ingresos
 - Consistente con modelos de **sorting residencial** con externalidades
 
-## 📖 Referencias Principales
+## Referencias Principales
 
 - **Duncan, O. D., & Duncan, B. (1955)**. A methodological analysis of segregation indexes. *American Sociological Review*, 20(2), 210-217.
 
@@ -213,7 +213,7 @@ $$\text{TP} = \frac{x_{(k^*)} + x_{(k^*+1)}}{2}, \quad k^* = \arg\max_k (x_{(k+1
 
 - **Card, D., Mas, A., & Rothstein, J. (2008)**. Tipping and the dynamics of segregation. *Quarterly Journal of Economics*, 123(1), 177-218.
 
-## 💡 Notas Técnicas
+## Notas Técnicas
 
 ### Supuestos clave
 - **Census tracts** como unidad de análisis (geografía 2010)
@@ -231,7 +231,7 @@ $$\text{TP} = \frac{x_{(k^*)} + x_{(k^*+1)}}{2}, \quad k^* = \arg\max_k (x_{(k+1
 - Índices de segregación robustos a distintas agregaciones espaciales
 - Correlaciones consistentes con literatura previa sobre Chicago
 
-## 🎯 Aplicaciones
+## Aplicaciones
 
 Este análisis es útil para:
 - **Policy makers**: Diseño de políticas de vivienda inclusiva
@@ -239,13 +239,7 @@ Este análisis es útil para:
 - **Investigadores**: Estudio de dinámicas de segregación y movilidad residencial
 - **ONGs**: Advocacy por equidad racial en acceso a amenidades urbanas
 
-## 📄 Licencia
 
-MIT License - Ver archivo [LICENSE](LICENSE) para más detalles.
-
-## 📧 Contacto
-
-Para preguntas sobre el código, datos o metodología, contactar a cualquiera de los autores mediante los correos listados arriba.
 
 ---
 
