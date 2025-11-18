@@ -1,0 +1,375 @@
+\documentclass[10pt,conference]{IEEEtran}
+
+% Paquetes básicos
+\usepackage[utf8]{inputenc}   % Codificación
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-tabla]{babel}
+\usepackage{microtype}
+\usepackage{natbib}
+\usepackage{graphicx} 
+\usepackage{caption}   
+\usepackage{subcaption}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage[font=small]{caption} 
+
+% Título y autores
+\title{Distribución espacial de la composición racial e ingreso en Chicago}
+
+\author{
+\IEEEauthorblockN{Luis Alejandro Rubiano Guerrero}
+\IEEEauthorblockA{202013482\\
+\texttt{la.rubiano@uniandes.edu.co}}
+\and
+\IEEEauthorblockN{Andrés Felipe Rosas Castillo}
+\IEEEauthorblockA{202013471\\
+\texttt{a.rosas@uniandes.edu.co}}
+\and
+\IEEEauthorblockN{Carlos Andrés Castillo Cabrera}
+\IEEEauthorblockA{202116837\\
+\texttt{ca.castilloc1@uniandes.edu.co}}
+}
+
+\begin{document}
+\maketitle
+\section{Mapas}
+\subsection*{Introducción}
+
+En este ejercicio estudiamos la distribución espacial de la población afroamericana e hispana en la ciudad de Chicago, así como su relación con el ingreso mediano a nivel de census tract. 
+
+\noindent El objetivo es documentar en qué partes de la ciudad se concentran estos grupos raciales, cómo ha evolucionado dicha concentración entre 2000 y 2020, y si existe una correlación sistemática entre la composición racial del barrio y su nivel de ingreso. Para ello construimos mapas por tramos censales y analizamos la correlación entre la fracción de población afroamericana e hispana y el ingreso mediano del tract.
+
+\subsection*{Datos y preparación}
+
+\noindent Trabajamos con dos insumos principales:
+
+\begin{itemize}
+    \item Un shapefile de los census tracts de Chicago (límite año 2010), que contiene la geometría de cada tramo censal e identificadores geográficos como \texttt{geoid10}.
+    \item Un panel de datos demográficos Combined\_data\_Panel.dta con información por tract-año para 2000, 2015 y 2020, incluyendo población total (\texttt{Total\_Pop}), población afroamericana (\texttt{Black\_Pop}), población hispana (\texttt{Hispanic\_Pop}) e ingreso mediano del tract (\texttt{Median\_Inc}).
+\end{itemize}
+
+\noindent Primero armonizamos los identificadores de los tracts. En el panel construimos la variable \texttt{geoid10} a partir de \texttt{FIPS} y la convertimos a formato \texttt{character}, de forma consistente con el shapefile. Sobre esa base calculamos las participaciones raciales a nivel de tract:
+\[share_black = \frac{Black_Pop}{Total_Pop},\; share_hispanic = \frac{Hispanic_Pop}{Total_Pop}. \]
+
+
+
+\noindent Posteriormente realizamos un left\_join entre el panel y el shapefile usando \texttt{geoid10}, lo que nos permite obtener un objeto sf con información demográfica y geometría para cada observación tract-año. Finalmente, filtramos las observaciones sin geometría válida y trabajamos con el subconjunto \texttt{chi\_panel\_sf}, que contiene 801 tracts por año (2000 y 2015) y 785 tracts en 2020.
+
+\subsection*{Metodología}
+
+La estrategia empírica tiene dos componentes principales:
+
+\subsection*{Mapas de composición racial}
+
+Construimos mapas que representan, para cada census tract, la fracción de población afroamericana e hispana. Utilizamos ggplot2 y sf para graficar la geometría de los tracts, y coloreamos cada polígono según share\_black o share\_hispanic.
+
+\noindent Para facilitar la comparación, trabajamos con la misma escala de color (paleta magma de viridis) y limitamos los valores entre 0 y 1, de forma que colores más oscuros indiquen mayor participación del grupo en el tract.
+
+\noindent En primer lugar, mostramos mapas para el año 2000 por separado para afroamericanos e hispanos. Luego construimos mapas con facet\_wrap por año (2000, 2015 y 2020), lo que permite observar la evolución temporal de la segregación espacial.
+
+\subsection*{Correlación con el ingreso mediano}
+
+Para estudiar la relación entre composición racial e ingreso, calculamos la correlación de Pearson entre share\_black y Median\_Inc, y entre share\_hispanic y Median\_Inc, separadamente por año:
+\[
+\text{cor\_black\_inc}(t) = \mathrm{corr}(share\_black, Median\_Inc \mid year = t),
+\]
+\[
+\text{cor\_hisp\_inc}(t) = \mathrm{corr}(share\_hispanic, Median\_Inc \mid year = t).
+\]
+
+\noindent Complementamos estos cálculos con diagramas de dispersión (scatterplots) de share\_black y share\_hispanic frente al ingreso mediano, incluyendo líneas de regresión lineal ajustadas por año. Esto nos permite visualizar la forma de la relación y detectar posibles no linealidades o valores atípicos.
+
+\subsection*{Resultados}
+\subsection*{Distribución espacial de afroamericanos e hispanos}
+\subsection*{Población afroamericana}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth]{map_black_facet.png}
+    \caption{Chicago: porcentaje de población afroamericana por census tract en 2000, 2015 y 2020.}
+    \label{fig:black_maps}
+\end{figure}
+
+En la Figura~\ref{fig:black_maps} se observa que la población afroamericana se concentra casi exclusivamente en el South Side y en parte del West Side de Chicago. Los census tracts con mayor porcentaje de afroamericanos forman un bloque continuo al sur del CBD (el Loop) y hacia el suroccidente de la ciudad, mientras que al norte del río Chicago y a lo largo del frente al lago casi no hay tracts con presencia afroamericana significativa. Es decir, los hogares afroamericanos tienden a ubicarse a distancias medias y altas del CBD, y están subrepresentados precisamente en las zonas con mayor dotación de amenidades urbanas: barrios del North Side cercanos al lago, con más parques, oferta cultural y mejor acceso a empleos de alta calificación.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth]{map_hisp_facet.png}
+    \caption{Chicago: porcentaje de población hispana por census tract en 2000, 2015 y 2020.}
+    \label{fig:hisp_maps}
+\end{figure}
+\subsection*{Población hispana}
+
+La Figura~\ref{fig:hisp_maps} muestra que la población hispana sigue un patrón distinto. Los hispanos se concentran en un corredor oeste–suroeste que arranca relativamente cerca del CBD (barrios como Pilsen y Little Village) y se extiende hacia el noroeste y el suroeste en 2015 y 2020. También aparecen focos importantes en el noroeste de la ciudad, asociados a barrios tradicionalmente obreros conectados por autopistas y líneas de metro. En términos de distancia al CBD, los hogares hispanos se ubican mayoritariamente en una “corona intermedia”: no ocupan el frente costero de mayor ingreso, pero tampoco están tan relegados al extremo sur como la población afroamericana. Además, hay más tracts “mixtos” con participaciones hispanas intermedias, lo que sugiere una segregación algo menos extrema que en el caso afroamericano.
+
+\noindent Estos patrones espaciales son consistentes con la historia urbana de Chicago. La concentración afroamericana en el South Side remite al antiguo Black Belt, formado durante la Gran Migración y reforzado por décadas de segregación residencial explícita (pactos restrictivos, redlining) y, más tarde, por desinversión y pérdida de empleo industrial. La población blanca de mayores ingresos se fue concentrando en el Loop, el frente al lago y el North Side, zonas con mejor acceso a amenidades, transporte y empleo formal. Por su parte, la llegada masiva de población latina desde mediados del siglo XX se dio inicialmente en barrios industriales cercanos al centro (Pilsen, el área de los antiguos mataderos) y luego se expandió hacia el oeste y suroeste siguiendo corredores de transporte y vivienda relativamente accesible. En las últimas dos décadas, procesos de gentrificación cerca del CBD han desplazado a parte de la población hispana hacia la periferia noroeste y suroeste, mientras que la población afroamericana permanece en gran medida concentrada en el sur, con correlaciones negativas más fuertes entre su participación en el tract y el ingreso mediano.
+
+\noindent Un detalle llamativo en los mapas es el cambio en la franja residencial junto al aeropuerto O'Hare en el noroeste de la ciudad: entre 2000 y 2015 parte de esa área desaparece como zona habitada y pasa a formar parte del polígono del aeropuerto. Esto no es un error de datos, sino el resultado de las expansiones sucesivas del aeropuerto (por ejemplo, el O'Hare Modernization Program aprobado a mediados de los 2000), que implicaron la compra y demolición de barrios residenciales adyacentes para construir nuevas pistas e infraestructura aeroportuaria.
+
+\subsection*{Correlaciones}
+Para explorar la relación entre composición racial e ingreso, calculamos la correlación de Pearson entre la fracción de población afroamericana en el census tract y el ingreso mediano del hogar. La correlación es negativa y de magnitud relativamente alta en los tres años: \(-0{,}51\) en 2000, \(-0{,}55\) en 2015 y \(-0{,}56\) en 2020. Es decir, los tracts con mayor participación de población afroamericana tienden a registrar ingresos medianos más bajos. Además, la correlación se hace ligeramente más negativa a lo largo del tiempo, lo que sugiere que la asociación entre concentración de población afroamericana y bajos ingresos no se ha atenuado en las dos últimas décadas. Esta relación se aprecia también en los diagramas de dispersión de la Figura~\ref{fig:scatter_black}, donde la nube de puntos muestra una clara pendiente descendente en los tres años.
+\begin{table}[ht]
+\centering
+\caption{Correlación entre composición racial e ingreso mediano del hogar por census tract en Chicago}
+\label{tab:correlaciones}
+\begin{tabular}{lcc}
+\hline\hline
+Año & $\mathrm{corr}(\text{share\_black}, \text{Median\_Inc})$ 
+    & $\mathrm{corr}(\text{share\_hispanic}, \text{Median\_Inc})$ \\
+\hline
+2000 & -0.514 & -0.060 \\
+2015 & -0.547 & -0.119 \\
+2020 & -0.563 & -0.116 \\
+\hline\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\linewidth]{scatter_black.png}
+\caption{Relación entre el porcentaje de población afroamericana e ingreso mediano del hogar por census tract en Chicago, 2000–2020. Cada punto es un tract; la línea roja corresponde al ajuste lineal por año.}
+\label{fig:scatter_black}
+\end{figure}
+\noindent La Figura~\ref{fig:scatter_black} muestra la relación entre la fracción de residentes afroamericanos y el ingreso mediano del hogar a nivel de census tract. En los tres años se observa una pendiente negativa clara: los tracts con mayor participación afroamericana tienden a ubicarse en la parte baja de la distribución de ingresos. Además, la nube de puntos es bimodal, con muchos tracts casi sin población afroamericana y otros con niveles cercanos al 100\%, lo que refleja un alto grado de segregación residencial. La pendiente se hace algo más pronunciada entre 2000 y 2020, consistente con el incremento en la correlación negativa reportado en el Cuadro~\ref{tab:correlaciones}.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\linewidth]{scatter_hisp.png}
+\caption{Relación entre el porcentaje de población hispana e ingreso mediano del hogar por census tract en Chicago, 2000–2020. Cada punto es un tract; la línea roja corresponde al ajuste lineal por año.}
+\label{fig:scatter_hisp}
+\end{figure}
+\noindent La Figura~\ref{fig:scatter_hisp} presenta la misma relación pero para la población hispana. En este caso la pendiente también es negativa, pero de magnitud mucho menor: las correlaciones entre share\_hispanic e ingreso mediano son cercanas a cero y sólo levemente negativas en los tres años (\(-0{,}06\) en 2000, alrededor de \(-0{,}12\) en 2015 y 2020), en línea con el Cuadro~\ref{tab:correlaciones}. Visualmente, los tracts con alta presencia hispana tienden a concentrarse en niveles de ingreso algo más bajos, pero la dispersión es mayor y se observan tracts hispanos en un rango más amplio de ingresos que en el caso afroamericano. Esto sugiere que, aunque los barrios hispanos también enfrentan desventajas económicas, la asociación entre composición étnica e ingreso es menos marcada que para la población afroamericana.
+
+\section{Índices de disimilitud y aislamiento}
+
+Para cuantificar la segregación residencial entre grupos raciales calculamos, a nivel de census tract y por año, el índice de disimilitud de Duncan y Duncan (1955) y el índice de aislamiento. 
+
+\noindent Sea $a_i$ la población del grupo minoritario en el tract $i$ y $b_i$ la población del grupo mayoritario en el mismo tract. Denotemos por $A = \sum_i a_i$ y $B = \sum_i b_i$ los totales de ciudad. El índice de disimilitud se define como
+\[
+D = \frac{1}{2} \sum_{i} \left| \frac{a_i}{A} - \frac{b_i}{B} \right|,
+\]
+el cual toma valores entre 0 y 1 (que aquí reportamos en una escala de 0 a 100). Intuitivamente, $D$ mide la fracción de la población del grupo minoritario que tendría que reubicarse a otro tract para que la distribución espacial de ambos grupos fuera idéntica.
+
+\noindent El índice de aislamiento del grupo $A$ se define como
+\[
+P_A = \sum_{i} \left( \frac{a_i}{A} \right) \left( \frac{a_i}{a_i + b_i} \right),
+\]
+que corresponde a la probabilidad de que un miembro del grupo $A$ tenga como vecino a alguien de su mismo grupo dentro de su tract. También lo reportamos en escala de 0 a 100.
+
+\noindent En nuestro ejercicio consideramos dos pares: (a) afroamericanos y blancos, y (b) hispanos y blancos. La Tabla~\ref{tab:indices_seg} resume los índices obtenidos para los años 2000, 2015 y 2020.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Índices de disimilitud y aislamiento por par racial (Chicago)}
+    \begin{tabular}{lccccc}
+        \hline
+        Año & $D_{BW}$ & Iso\_black & $D_{HW}$ & Iso\_hisp \\
+            & (0--100) & (0--100)   & (0--100) & (0--100)  \\
+        \hline
+        2000 & 85.5 & 89.8 & 59.2 & 68.5 \\
+        2015 & 82.6 & 86.8 & 60.6 & 70.9 \\
+        2020 & 81.8 & 85.6 & 59.4 & 69.5 \\
+        \hline
+    \end{tabular}
+    \label{tab:indices_seg}
+\end{table}
+
+\noindent
+\textbf{(a) Afroamericanos y blancos.} Los índices de disimilitud afroamericanos--blancos son muy altos en todo el período: pasan de 85.5 en 2000 a 82.6 en 2015 y 81.8 en 2020. Estos valores implican que alrededor del 80--85\% de la población negra tendría que cambiar de tract para que su distribución espacial coincidiera con la de la población blanca, lo que se interpreta como un nivel de segregación extremadamente alto. La ligera caída de $D_{BW}$ sugiere una desegregación marginal, pero los niveles se mantienen muy por encima del umbral usual de ``alta segregación'' (aproximadamente 60 puntos).
+
+\noindent El índice de aislamiento afroamericano también es extremo: desciende de 89.8 en 2000 a 85.6 en 2020. Esto indica que el residente afroamericano promedio vive en tracts donde entre el 85\% y el 90\% de sus vecinos también son afroamericanos. Incluso el aislamiento de los blancos (no mostrado en la tabla) se mantiene alrededor de 87--88 puntos, lo cual revela que ambos grupos residen en vecindarios racialmente muy homogéneos.
+
+\medskip
+\noindent
+\textbf{(b) Hispanos y blancos.} En el caso de hispanos y blancos, los índices de disimilitud son sistemáticamente menores que en el par afroamericanos--blancos, pero siguen ubicándose en el rango de segregación moderada--alta. El índice $D_{HW}$ se sitúa entre 59.2 y 60.6 puntos en los tres años considerados y no muestra una tendencia clara a la baja. El índice de aislamiento hispano es también elevado (entre 68.5 y 70.9), lo que sugiere que el residente hispano promedio vive en barrios donde alrededor del 70\% de sus vecinos también son hispanos. En comparación con los afroamericanos, los hispanos están algo menos segregados y aislados, pero siguen concentrándose en enclaves latinos bien definidos dentro de la ciudad.
+
+\noindent La combinación de índices de disimilitud muy altos y niveles de aislamiento cercanos al 90\% para afroamericanos refleja la persistencia de una segregación histórica muy rígida en Chicago, asociada a políticas pasadas de redlining, covenants raciales y concentración de vivienda pública, así como al white flight y la suburbanización selectiva de la población blanca. En el caso hispano, los niveles de segregación algo menores pero todavía altos, junto con un aislamiento cercano al 70\%, son consistentes con la formación y persistencia de enclaves migratorios latinos (por ejemplo en el oeste y suroccidente de la ciudad), donde las redes comunitarias y las restricciones de acceso a vivienda en otras zonas contribuyen a mantener una fuerte concentración espacial de la población hispana.
+
+
+\section*{Punto 3. Tipping points de segregación}
+
+\subsection*{Definición y metodología.}
+\noindent Siguiendo la intuición de Schelling y la implementación empírica de Card, 
+entendemos un tipping point como un umbral en la composición racial
+de un barrio a partir del cual la dinámica de segregación cambia de forma
+no lineal. En nuestro contexto, ese umbral separa tracts con ``baja'' y
+``alta'' presencia de minorías: por debajo del tipping la fracción de
+minorías crece lentamente, mientras que por encima del umbral se observa
+una concentración mucho mayor.
+
+\noindent Para cada census tract $i$ y año $t$ calculamos tres fracciones:
+\[
+\begin{aligned}
+\text{share\_minority}_{it} &= 1 - \frac{\text{White\_Pop}_{it}}{\text{Total\_Pop}_{it}}, \\
+\text{share\_black}_{it}    &= \frac{\text{Black\_Pop}_{it}}{\text{Total\_Pop}_{it}}, \\
+\text{share\_hisp}_{it}     &= \frac{\text{Hispanic\_Pop}_{it}}{\text{Total\_Pop}_{it}}.
+\end{aligned}
+\]
+A partir de estas fracciones estimamos el tipping point año a año mediante
+un criterio puramente distributivo: para cada variable de share
+ordenamos los tracts de menor a mayor, eliminamos valores extremos
+(casi ceros y casi unos) y buscamos el mayor salto en la distribución.
+Sea $\{x_{(1)},\dots,x_{(n)}\}$ la secuencia ordenada de shares; definimos
+\[
+\Delta_k = x_{(k+1)} - x_{(k)}, \qquad k=1,\dots,n-1,
+\]
+y tomamos como tipping point el punto medio entre los dos valores que
+generan el mayor gap:
+\[
+\text{TP} = \frac{x_{(k^\ast)} + x_{(k^\ast+1)}}{2},
+\quad\text{donde } k^\ast = \arg\max_k \Delta_k.
+\]
+Intuitivamente, el tipping point es el umbral donde la distribución de
+shares ``salta'' desde barrios relativamente mixtos a barrios con una
+mayor concentración del grupo considerado.
+
+%------------------------------------------------
+\subsection*{(a) Evolución de los tipping points}
+
+\noindent La Tabla~\ref{tab:tipping} resume los tipping points estimados para
+minorías en general, afroamericanos e hispanos en 2000, 2015 y 2020.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Tipping points por grupo racial y año (fracción de la población del grupo)}
+  \label{tab:tipping}
+  \begin{tabular}{lccc}
+    \toprule
+    & \multicolumn{3}{c}{Tipping point} \\
+    \cmidrule(lr){2-4}
+    Año & Minorías & Afroamericanos & Hispanos \\
+    \midrule
+    2000 & 0.547 & 0.630 & 0.871 \\
+    2015 & 0.076 & 0.392 & 0.505 \\
+    2020 & 0.094 & 0.401 & 0.512 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+En 2000 el tipping point para minorías en general se ubica en torno al
+0.55: existe un salto claro entre barrios con baja presencia de minorías
+y barrios donde más de la mitad de la población no es blanca. Para 2015
+y 2020 este umbral cae a valores cercanos al 0.08--0.09, de modo que
+basta una fracción relativamente pequeña de minorías para que el tract
+quede del lado ``alto'' del umbral. Esto es consistente con la idea de
+que Chicago pasa de tener una franja de barrios mayoritariamente blancos
+a ser una ciudad majority-minority en casi todo su territorio.
+
+Para afroamericanos el tipping point cae de aproximadamente 0.63 en
+2000 a 0.39--0.40 en 2015--2020. Es decir, el salto en la distribución
+ya no se da entre barrios con 60\% y 80\% de población afroamericana,
+sino entre barrios con alrededor de 40\% y valores superiores. En el
+caso de los hispanos el cambio es aún más pronunciado: el umbral desciende
+de 0.87 en 2000 a cerca de 0.50 a partir de 2015, lo que indica que los
+enclaves latinos dejan de ser tracts casi exclusivamente hispanos para
+extenderse a barrios donde aproximadamente la mitad de la población es
+hispana.
+
+%------------------------------------------------
+
+\subsection*{(b) Mapas a ambos lados del tipping point}
+
+Para visualizar la dimensión espacial de estos umbrales, construimos
+tres conjuntos de mapas. Primero, calculamos para cada tract, año y
+grupo racial una variable categórica que clasifica el tract según su
+posición relativa al tipping point estimado:
+\[
+\text{cat\_grupo}_{it} =
+\begin{cases}
+\leq\text{tipping} & \text{si } \text{share}_{it} \leq \text{TP}_t,\\
+>\text{tipping}    & \text{si } \text{share}_{it} >  \text{TP}_t.
+\end{cases}
+\]
+Luego, para cada año mapeamos los tracts de Chicago
+coloreando en gris los tracts con share por debajo o igual al tipping
+y en rojo/azul/naranja los tracts por encima del umbral. Encima de
+los tracts superponemos los contornos de las community areas
+para facilitar la lectura geográfica.
+
+Los mapas de minorías en general (Figura~\ref{fig:tipping-minority})
+muestran que en 2000 aún existe un conjunto visible de tracts por
+debajo del tipping, concentrados sobre todo en el North Side y en
+algunos barrios del noroeste y del borde suroccidental de la ciudad.
+En 2015 y 2020, en cambio, casi todo el territorio urbano aparece del
+lado alto del umbral: sólo subsiste un puñado de tracts ``blancos''
+en el extremo noroeste y en una pequeña franja del North Side. Esto
+refuerza la idea de que Chicago se vuelve una ciudad mayoritariamente
+de minorías en casi todas sus community areas.
+
+En el caso de los afroamericanos (Figura~\ref{fig:tipping-black}), los
+tracts por encima del tipping se concentran sistemáticamente en el
+South Side y en una franja del West Side. Entre 2000 y
+2015 se observa cierta expansión de los tracts ``> tipping'' hacia
+el oeste y el suroeste, mientras que en 2020 el patrón se consolida
+sobre todo en el sur y sureste de la ciudad. A pesar de la caída del
+tipping point, la geografía de los barrios con alta presencia
+afroamericana es bastante estable: el mapa sugiere persistencia de un
+cinturón afroamericano en el sur y oeste de Chicago.
+
+Para los hispanos (Figura~\ref{fig:tipping-hisp}), en 2000 sólo unos
+pocos tracts muy concentrados aparecen por encima del tipping,
+ubicados en los tradicionales enclaves latinos del oeste y suroeste
+(Pilsen, Little Village y alrededores). A partir de 2015 aumenta
+claramente el número de tracts ``> tipping'': se forma un corredor
+continuo que va desde el noroeste de la ciudad hasta el cinturón
+oeste y suroeste, y aparecen algunos tracts adicionales en el sur y
+sureste. En 2020 este patrón se mantiene y se densifica, reflejando
+la expansión territorial de la población hispana más allá de los
+enclaves históricos del West Side.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8835\linewidth]{tipping_minority_map.png}
+  \caption{Tracts por debajo y por encima del tipping point de minorías en Chicago, 2000–2015–2020. 
+  En gris se muestran los tracts con fracción de minorías por debajo o igual al umbral estimado y en rojo
+  los tracts por encima del tipping point. Las líneas negras delimitan las community areas.}
+  \label{fig:tipping-minority}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8835\linewidth]{tipping_minority_map_afro.png}
+  \caption{Tracts por debajo y por encima del tipping point de población afroamericana en Chicago, 2000–2015–2020.
+  En gris se muestran los tracts con fracción de afroamericanos por debajo o igual al umbral estimado y en azul
+  los tracts por encima del tipping point. Las líneas negras delimitan las community areas.}
+  \label{fig:tipping-black}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8835\linewidth]{tipping_minority_map_hispanos.png}
+  \caption{Tracts por debajo y por encima del tipping point de población hispana en Chicago, 2000–2015–2020.
+  En gris se muestran los tracts con fracción de hispanos por debajo o igual al umbral estimado y en naranja
+  los tracts por encima del tipping point. Las líneas negras delimitan las community areas.}
+  \label{fig:tipping-hisp}
+\end{figure}
+
+\subsection*{Conclusión}
+
+En conjunto, el ejercicio de tipping points complementa la evidencia de los
+índices de disimilitud y aislamiento del punto anterior. Primero, confirma
+que Chicago se ha convertido en una ciudad majority minority: en 2015
+y 2020 casi todos los tracts quedan por encima del tipping de minorías, de
+modo que los pocos enclaves “blancos” pasan a ser la excepción. Segundo,
+muestra que la segregación afroamericana sigue siendo muy persistente: el
+cinturón del South Side y parte del West Side permanece claramente por
+encima del umbral a lo largo de todo el período, pese a la caída del
+tipping point. Finalmente, el caso hispano ilustra un patrón distinto:
+los enclaves latinos ya no se limitan a unos cuantos barrios del West Side,
+sino que se expanden formando un corredor continuo noroeste–oeste–suroeste
+y con presencia creciente en el sur de la ciudad. Estos resultados son
+coherentes con la intuición de los modelos de tipping de Schelling y con la
+evidencia empírica de Card, Mas y Rothstein: pequeños cambios en la
+composición racial pueden generar rupturas discretas en la distribución,
+de modo que la ciudad termina organizada en cinturones espaciales donde
+unos grupos se concentran y otros prácticamente desaparecen.
+
+\subsection*{Referencias}
+
+\begin{itemize}
+  \item Schelling, T. C. (1971). Dynamic models of segregation. \emph{Journal of Mathematical Sociology}, 1(2), 143--186.
+  \item Card, D., Mas, A., \& Rothstein, J. (2008). Tipping and the dynamics of segregation. \emph{Quarterly Journal of Economics}, 123(1), 177--218.
+\end{itemize}
+
+
+\end{document}
